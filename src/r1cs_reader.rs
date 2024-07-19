@@ -177,10 +177,7 @@ impl Header {
         let mut prime_size = vec![0u8; field_size as usize];
         reader.read_exact(&mut prime_size)?;
 
-        if prime_size
-            != hex::decode("2147483647")
-                .unwrap()
-        {
+        if prime_size != hex::decode("ffffff7f00000000").unwrap() {
             return Err(IoError(Error::new(
                 ErrorKind::InvalidData,
                 "This parser only supports m31",
