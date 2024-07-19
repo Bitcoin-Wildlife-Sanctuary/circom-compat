@@ -160,10 +160,10 @@ pub struct Header {
 impl Header {
     fn new<R: Read>(mut reader: R, size: u64) -> IoResult<Header> {
         let field_size = reader.read_u32::<LittleEndian>()?;
-        if field_size != 32 {
+        if field_size != 8 {
             return Err(IoError(Error::new(
                 ErrorKind::InvalidData,
-                "This parser only supports 32-byte fields",
+                "This parser only supports 8-byte fields",
             )));
         }
 
@@ -178,12 +178,12 @@ impl Header {
         reader.read_exact(&mut prime_size)?;
 
         if prime_size
-            != hex::decode("010000f093f5e1439170b97948e833285d588181b64550b829a031e1724e6430")
+            != hex::decode("2147483647")
                 .unwrap()
         {
             return Err(IoError(Error::new(
                 ErrorKind::InvalidData,
-                "This parser only supports bn256",
+                "This parser only supports m31",
             )));
         }
 
