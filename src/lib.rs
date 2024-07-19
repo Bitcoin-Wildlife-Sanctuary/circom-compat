@@ -1,14 +1,13 @@
 //! Arkworks - Circom Compatibility layer
 //!
 //! Provides bindings to Circom's R1CS, for Groth16 Proof and Witness generation in Rust.
-mod witness;
-pub use witness::{Wasm, WitnessCalculator};
 
-pub mod circom;
-pub use circom::{CircomBuilder, CircomCircuit, CircomConfig, CircomReduction};
+pub mod circuit;
+pub mod r1cs_reader;
 
-#[cfg(feature = "ethereum")]
-pub mod ethereum;
+pub use crate::r1cs_reader::{R1CSFile, R1CS};
 
-mod zkey;
-pub use zkey::read_zkey;
+pub use crate::circuit::CircomCircuit;
+
+pub type Constraints<F> = (ConstraintVec<F>, ConstraintVec<F>, ConstraintVec<F>);
+pub type ConstraintVec<F> = Vec<(usize, F)>;
