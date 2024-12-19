@@ -138,7 +138,7 @@ impl<F: PrimeField> R1CSFile<F> {
         let wire_mapping = read_map(&mut reader, *wire2label_size?, &header)?;
 
         assert_eq!(
-            reader.read_u32().unwrap_err().kind(),
+            reader.read_u32::<LittleEndian>().unwrap_err().kind(),
             ErrorKind::UnexpectedEof
         );
 
