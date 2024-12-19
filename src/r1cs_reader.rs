@@ -137,6 +137,11 @@ impl<F: PrimeField> R1CSFile<F> {
 
         let wire_mapping = read_map(&mut reader, *wire2label_size?, &header)?;
 
+        assert_eq!(
+            reader.read_u32().unwrap_err().kind(),
+            ErrorKind::UnexpectedEof
+        );
+
         Ok(R1CSFile {
             version,
             header,
@@ -202,7 +207,7 @@ fn read_constraint_vec<R: Read, F: PrimeField>(mut reader: R) -> IoResult<Constr
     let mut vec = Vec::with_capacity(n_vec);
     for _ in 0..n_vec {
         let idx = reader.read_u32::<LittleEndian>()? as usize;
-        let v = reader.read_u64::<LittleEndian>()?;
+        let v = reader.read_u32::<LittleEndian>()?;
         vec.push((idx, F::from(v)));
     }
     Ok(vec)
