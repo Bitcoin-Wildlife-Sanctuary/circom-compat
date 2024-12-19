@@ -160,10 +160,10 @@ pub struct Header {
 impl Header {
     fn new<R: Read>(mut reader: R, size: u64) -> IoResult<Header> {
         let field_size = reader.read_u32::<LittleEndian>()?;
-        if field_size != 8 {
+        if field_size != 4 {
             return Err(IoError(Error::new(
                 ErrorKind::InvalidData,
-                "This parser only supports 8-byte fields",
+                "This parser only supports 4-byte fields",
             )));
         }
 
