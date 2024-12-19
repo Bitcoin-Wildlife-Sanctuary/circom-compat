@@ -20,7 +20,6 @@ pub struct R1CS<F> {
     pub num_aux: usize,
     pub num_variables: usize,
     pub constraints: Vec<Constraints<F>>,
-    pub wire_mapping: Option<Vec<usize>>,
 }
 
 impl<F: PrimeField> From<R1CSFile<F>> for R1CS<F> {
@@ -33,7 +32,6 @@ impl<F: PrimeField> From<R1CSFile<F>> for R1CS<F> {
             num_inputs,
             num_variables,
             constraints: file.constraints,
-            wire_mapping: Some(file.wire_mapping.iter().map(|e| *e as usize).collect()),
         }
     }
 }
@@ -42,7 +40,6 @@ pub struct R1CSFile<F: PrimeField> {
     pub version: u32,
     pub header: Header,
     pub constraints: Vec<Constraints<F>>,
-    pub wire_mapping: Vec<u64>,
 }
 
 impl<F: PrimeField> R1CSFile<F> {
@@ -88,7 +85,6 @@ impl<F: PrimeField> R1CSFile<F> {
 
         let header_type = 1;
         let constraint_type = 2;
-        let wire2label_type = 3;
 
         let header_offset = sec_offsets.get(&header_type).ok_or_else(|| {
             Error::new(
@@ -119,29 +115,10 @@ impl<F: PrimeField> R1CSFile<F> {
 
         let constraints = read_constraints::<&mut R, F>(&mut reader, &header)?;
 
-        let wire2label_offset = sec_offsets.get(&wire2label_type).ok_or_else(|| {
-            Error::new(
-                ErrorKind::InvalidData,
-                "No section offset for wire2label type found",
-            )
-        });
-
-        reader.seek(SeekFrom::Start(*wire2label_offset?))?;
-
-        let wire2label_size = sec_sizes.get(&wire2label_type).ok_or_else(|| {
-            Error::new(
-                ErrorKind::InvalidData,
-                "No section size for wire2label type found",
-            )
-        });
-
-        let wire_mapping = read_map(&mut reader, *wire2label_size?, &header)?;
-
         Ok(R1CSFile {
             version,
             header,
             constraints,
-            wire_mapping,
         })
     }
 }
@@ -220,26 +197,6 @@ fn read_constraints<R: Read, F: PrimeField>(
             read_constraint_vec::<&mut R, F>(&mut reader)?,
             read_constraint_vec::<&mut R, F>(&mut reader)?,
         ));
-    }
-    Ok(vec)
-}
-
-fn read_map<R: Read>(mut reader: R, size: u64, header: &Header) -> IoResult<Vec<u64>> {
-    if size != header.n_wires as u64 * 8 {
-        return Err(IoError(Error::new(
-            ErrorKind::InvalidData,
-            "Invalid map section size",
-        )));
-    }
-    let mut vec = Vec::with_capacity(header.n_wires as usize);
-    for _ in 0..header.n_wires {
-        vec.push(reader.read_u64::<LittleEndian>()?);
-    }
-    if vec[0] != 0 {
-        return Err(IoError(Error::new(
-            ErrorKind::InvalidData,
-            "Wire 0 should always be mapped to 0",
-        )));
     }
     Ok(vec)
 }

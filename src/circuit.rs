@@ -18,10 +18,7 @@ impl<F: PrimeField> CircomCircuit<F> {
     pub fn get_public_inputs(&self) -> Option<Vec<F>> {
         match &self.witness {
             None => None,
-            Some(w) => match &self.r1cs.wire_mapping {
-                None => Some(w[1..self.r1cs.num_inputs].to_vec()),
-                Some(m) => Some(m[1..self.r1cs.num_inputs].iter().map(|i| w[*i]).collect()),
-            },
+            Some(w) => Some(w[1..self.r1cs.num_inputs].to_vec()),
         }
     }
 }
@@ -29,17 +26,13 @@ impl<F: PrimeField> CircomCircuit<F> {
 impl<F: PrimeField> ConstraintSynthesizer<F> for CircomCircuit<F> {
     fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
         let witness = &self.witness;
-        let wire_mapping = &self.r1cs.wire_mapping;
 
         // Start from 1 because Arkworks implicitly allocates One for the first input
         for i in 1..self.r1cs.num_inputs {
             cs.new_input_variable(|| {
                 Ok(match witness {
                     None => F::from(1u32),
-                    Some(w) => match wire_mapping {
-                        Some(m) => w[m[i]],
-                        None => w[i],
-                    },
+                    Some(w) => w[i],
                 })
             })?;
         }
@@ -48,10 +41,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for CircomCircuit<F> {
             cs.new_witness_variable(|| {
                 Ok(match witness {
                     None => F::from(1u32),
-                    Some(w) => match wire_mapping {
-                        Some(m) => w[m[i + self.r1cs.num_inputs]],
-                        None => w[i + self.r1cs.num_inputs],
-                    },
+                    Some(w) => w[i + self.r1cs.num_inputs],
                 })
             })?;
         }
